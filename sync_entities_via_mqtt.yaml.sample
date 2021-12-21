@@ -1,0 +1,14 @@
+SyncEntitiesViaMqtt:
+  module: sync_entities_via_mqtt
+  class: SyncEntitiesViaMqtt
+  my_hostname: haven # no dashes
+  state_for_entities:
+      - input_select.home_state 
+  disable: false
+
+TestSyncEntitiesViaMqtt:
+  module: sync_entities_via_mqtt
+  class: TestSyncEntitiesViaMqtt
+  disable: true
+  dependencies: 
+    - SyncEntitiesViaMqtt

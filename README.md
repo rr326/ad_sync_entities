@@ -1,2 +1,1 @@
 # Sync Entities Via MQTT
-
