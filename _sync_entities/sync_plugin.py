@@ -1,0 +1,28 @@
+from appdaemon.adapi import ADAPI
+from appdaemon.plugins.mqtt.mqttapi import Mqtt as mqttapi
+from _sync_entities.sync_dispatcher import EventListenerDispatcher
+
+
+class Plugin:
+    def __init__(
+        self,
+        adapi: ADAPI,
+        mqtt: mqttapi,
+        dispatcher: EventListenerDispatcher,
+        mqtt_base_topic: str,
+        argsn: object,
+        myhostname: str,
+    ):
+        self.adapi = adapi
+        self.mqtt = mqtt
+        self.dispatcher = dispatcher
+        self.mqtt_base_topic = mqtt_base_topic
+        self.argsn = argsn
+        self.myhostname = myhostname
+
+        self.initialize()
+
+        self.adapi.log(f'Plugin Initialized: {self.__class__}')
+
+    def initialize(self):
+        raise NotImplementedError("Overide in inherited object")

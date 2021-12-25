@@ -1,14 +1,17 @@
 import re
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import adplus
 from appdaemon.plugins.mqtt import mqttapi as mqtt
 
-adplus.importlib.reload(adplus)
 
-from _sync_entities.dispatcher import EventListenerDispatcher, EventPattern
+from _sync_entities.sync_dispatcher import EventListenerDispatcher, EventPattern
+from _sync_entities.sync_plugin_ping_pong import PingPongPlugin
+import _sync_entities.sync_plugin_ping_pong
+from _sync_entities.sync_plugin import Plugin
 
 # pylint: disable=unused-argument
+
 
 
 class SyncEntitiesViaMqtt(mqtt.Mqtt):
@@ -32,7 +35,7 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
     MQTT_DEFAULT_BASE_TOPIC = "mqtt_shared"
 
     SCHEMA = {
-        "my_hostname": {
+        "myhostname": {
             "required": True,
             "type": "string",
             "regex": "^[^-]+$",  # No dashes permitted
@@ -51,17 +54,31 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
 
     def initialize(self):
         self.log("Initialize")
+        self.adapi = self.get_ad_api()
         self.argsn = adplus.normalized_args(self, self.SCHEMA, self.args, debug=False)
         self.state_entities = self.argsn.get("state_for_entities")
         self._state_listeners = set()
-        self.my_hostname = self.argsn.get("my_hostname", "HOSTNAME_NOT_SET")
+        self.myhostname = self.argsn.get("myhostname", "HOSTNAME_NOT_SET")
         self.mqtt_base_topic = self.argsn.get(
             "mqtt_base_topic", self.MQTT_DEFAULT_BASE_TOPIC
         )
-
         self.dispatcher = EventListenerDispatcher(
             self.get_ad_api(), self.mqtt_base_topic
         )
+
+        self._plugins = [PingPongPlugin]
+        self._plugin_handles: List[Plugin] = []
+        for plugin in self._plugins:
+            self._plugin_handles.append(
+                plugin(
+                    self.adapi,
+                    self,
+                    self.dispatcher,
+                    self.mqtt_base_topic,
+                    self.argsn,
+                    self.myhostname,
+                )
+            )
 
         # Note - this will not work if you have previously registered wildcard="#"
         self.mqtt_unsubscribe(
@@ -71,18 +88,11 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
 
         # Register event dispatch listeners - processing INCOMING messages
         self.dispatcher.add_listener("print all", EventPattern(), None)
-        self.dispatcher.add_listener(
-            "ping/pong",
-            EventPattern(
-                pattern_tohost=f"!{self.my_hostname}",  # Only listen to for events I didn't create
-                pattern_event_type="ping",
-            ),
-            self.ping_callback,
-        )
+
         self.dispatcher.add_listener(
             "inbound state",
             EventPattern(
-                pattern_fromhost=f"!{self.my_hostname}",  # Only listen to for events I didn't create
+                pattern_fromhost=f"!{self.myhostname}",  # Only listen to for events I didn't create
                 pattern_event_type="state",
             ),
             self.inbound_state_callback,
@@ -156,18 +166,6 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         self.log(f"mq_listener: {event}, {data}")
         self.dispatcher.dispatch(data.get("topic"), data.get("payload"))
 
-    def ping_callback(
-        self, fromhost, tohost, event, entity, payload, payload_asobj=None
-    ):
-        self.log(
-            f"PING/PONG - {self.mqtt_base_topic}/{fromhost}/{tohost}/pong - {payload} [my_hostname: {self.my_hostname}]"
-        )
-        self.mqtt_publish(
-            topic=f"{self.mqtt_base_topic}/{self.my_hostname}/{fromhost}/pong",
-            payload=payload,
-            namespace="mqtt",
-        )
-
     def inbound_state_callback(
         self, fromhost, tohost, event, entity, payload, payload_asobj=None
     ):
@@ -192,7 +190,7 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         def state_callback(entity, attribute, old, new, kwargs):
             self.log(f"state_callback(): {entity} -- {attribute} -- {new}")
             self.mqtt_publish(
-                topic=f"{self.mqtt_base_topic}/{self.my_hostname}/state/{entity}",
+                topic=f"{self.mqtt_base_topic}/{self.myhostname}/state/{entity}",
                 payload=new,
                 namespace="mqtt",
             )
@@ -255,7 +253,7 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
                 raise RuntimeError(f"Invalid action: |{action}|, type: {type(action)}")
 
             self.mqtt_publish(
-                topic=f"{self.mqtt_base_topic}/{remote_host}/state/{remote_entity}",
+                topic=f"{self.mqtt_base_topic}/{self.myhostname}/{remote_host}/state/{remote_entity}",
                 payload=value,
                 namespace="mqtt",
             )

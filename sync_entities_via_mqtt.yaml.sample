@@ -1,13 +1,22 @@
+global_modules:
+  - plugin_ping_pong
+  - dispatcher
+  - sync_plugin
+
 SyncEntitiesViaMqtt:
   module: sync_entities_via_mqtt
   class: SyncEntitiesViaMqtt
-  my_hostname: haven # no dashes
+  myhostname: haven # no dashes
   state_for_entities:
       - input_select.home_state 
   disable: false
+  global_dependencies:
+    - plugin_ping_pong
+    - dispatcher
+    - sync_plugin
 
 TestSyncEntitiesViaMqtt:
-  module: sync_entities_via_mqtt
+  module: test_sync_entities
   class: TestSyncEntitiesViaMqtt
   disable: true
   dependencies: 

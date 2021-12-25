@@ -4,7 +4,7 @@ adplus.importlib.reload(adplus)
 
 # pylint: disable=unused-argument,use-implicit-booleaness-not-comparison
 
-from _sync_entities.dispatcher import EventListenerDispatcher, EventParts, EventPattern
+from _sync_entities.sync_dispatcher import EventListenerDispatcher, EventParts, EventPattern
 
 MQTT_DEFAULT_BASE_TOPIC = "mqtt_shared"
 
