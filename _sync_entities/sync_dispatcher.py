@@ -27,7 +27,6 @@ class EventParts:
         mqtt_shared/<fromhost>/<tohost>/<event_type>/<entity>
         mqtt_shared/haven/seattle/state/light.outside_porch
         mqtt_shared/haven/all/state/light.outside_porch
-        mqtt_shared/haven/*/state/light.outside_porch
 
         mqtt_shared/haven/*/ping
 
@@ -92,12 +91,14 @@ class EventParts:
 
         if "special_all",
         pattern=="all" --> True
-        pattern=="*" --> True
         """
         if pattern is None:
-            return True
-        if special_all and pattern in ["all", "*"]:
-            return True
+            return True 
+        if special_all:
+            if pattern == "all":
+                return True
+            if value == "all":
+                return True
         if pattern[0] == "!":
             return pattern[1:] != value
         else:

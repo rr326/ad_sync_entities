@@ -3,15 +3,13 @@ from typing import Optional, Tuple, List
 
 import adplus
 from appdaemon.plugins.mqtt import mqttapi as mqtt
+from importlib import reload
 
 
 from _sync_entities.sync_dispatcher import EventListenerDispatcher, EventPattern
-from _sync_entities.sync_plugin_ping_pong import PingPongPlugin
-import _sync_entities.sync_plugin_ping_pong
 from _sync_entities.sync_plugin import Plugin
 
 # pylint: disable=unused-argument
-
 
 
 class SyncEntitiesViaMqtt(mqtt.Mqtt):
@@ -66,7 +64,11 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
             self.get_ad_api(), self.mqtt_base_topic
         )
 
-        self._plugins = [PingPongPlugin]
+        import _sync_entities.sync_plugin_ping_pong
+
+        reload(_sync_entities.sync_plugin_ping_pong)
+
+        self._plugins = [_sync_entities.sync_plugin_ping_pong.PingPongPlugin]
         self._plugin_handles: List[Plugin] = []
         for plugin in self._plugins:
             self._plugin_handles.append(
@@ -89,30 +91,30 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         # Register event dispatch listeners - processing INCOMING messages
         self.dispatcher.add_listener("print all", EventPattern(), None)
 
-        self.dispatcher.add_listener(
-            "inbound state",
-            EventPattern(
-                pattern_fromhost=f"!{self.myhostname}",  # Only listen to for events I didn't create
-                pattern_event_type="state",
-            ),
-            self.inbound_state_callback,
-        )
+        # self.dispatcher.add_listener(
+        #     "inbound state",
+        #     EventPattern(
+        #         pattern_fromhost=f"!{self.myhostname}",  # Only listen to for events I didn't create
+        #         pattern_event_type="state",
+        #     ),
+        #     self.inbound_state_callback,
+        # )
 
-        # Register OUTGOING messages
-        self.run_in(self.register_state_entities, 0)
+        # # Register OUTGOING messages
+        # self.run_in(self.register_state_entities, 0)
 
-        # Register sync_servic
-        self.run_in(self.register_sync_service, 0)
+        # # Register sync_servic
+        # self.run_in(self.register_sync_service, 0)
 
-        def test_sync_service(kwargs):
-            self.log("***test_sync_service()***")
-            self.call_service(
-                "sync_entities_via_mqtt/toggle_state",
-                entity_id="light.office_seattle",
-                namespace="default",
-            )
+        # def test_sync_service(kwargs):
+        #     self.log("***test_sync_service()***")
+        #     self.call_service(
+        #         "sync_entities_via_mqtt/toggle_state",
+        #         entity_id="light.office_seattle",
+        #         namespace="default",
+        #     )
 
-        self.run_in(test_sync_service, 1)
+        # self.run_in(test_sync_service, 1)
 
         # Listen to all MQ events
         self.listen_event(

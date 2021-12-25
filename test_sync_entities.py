@@ -48,6 +48,9 @@ class TestSyncEntitiesViaMqtt(adplus.Hass):
         topic = f"mqtt_shared/haven/BOGUS/ping"
         assert not EventParts(adapi, "mqtt_shared", topic, EventPattern(pattern_tohost="seattle")).matches
 
+        topic = f"mqtt_shared/haven/seattle/ping"
+        assert not EventParts(adapi, "mqtt_shared", topic, EventPattern(pattern_fromhost="!haven", pattern_tohost="seattle")).matches
+
         # topic too long
         topic = f"mqtt_shared/haven/seattle/state/myentity/BOGUS"
         assert not EventParts(adapi, "mqtt_shared", topic, None).matches

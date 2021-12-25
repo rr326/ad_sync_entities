@@ -6,12 +6,14 @@ from _sync_entities.sync_dispatcher import EventPattern
 
 # pylint: disable=unused-argument
 
+
 class PingPongPlugin(Plugin):
     def initialize(self):
         self.dispatcher.add_listener(
             "ping/pong",
             EventPattern(
-                pattern_tohost=f"!{self.myhostname}",  # Only listen to for events I didn't create
+                pattern_fromhost=f"!{self.myhostname}", 
+                pattern_tohost=f"{self.myhostname}",
                 pattern_event_type="ping",
             ),
             self.ping_callback,
@@ -20,6 +22,7 @@ class PingPongPlugin(Plugin):
     def ping_callback(
         self, fromhost, tohost, event, entity, payload, payload_asobj=None
     ):
+        self.adapi.log(f"PING/PONG - event: {event}")
         self.adapi.log(
             f"PING/PONG - {self.mqtt_base_topic}/{fromhost}/{tohost}/pong - {payload} [myhostname: {self.myhostname}]"
         )
