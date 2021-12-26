@@ -65,10 +65,12 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         )
 
         import _sync_entities.sync_plugin_ping_pong
+        import _sync_entities.sync_plugin_print_all
 
         reload(_sync_entities.sync_plugin_ping_pong)
+        reload(_sync_entities.sync_plugin_print_all)
 
-        self._plugins = [_sync_entities.sync_plugin_ping_pong.PingPongPlugin]
+        self._plugins = [_sync_entities.sync_plugin_print_all.PluginPrintAll, _sync_entities.sync_plugin_ping_pong.PluginPingPong]
         self._plugin_handles: List[Plugin] = []
         for plugin in self._plugins:
             self._plugin_handles.append(
@@ -89,7 +91,7 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         self.mqtt_subscribe(f"{self.mqtt_base_topic}/#", namespace="mqtt")
 
         # Register event dispatch listeners - processing INCOMING messages
-        self.dispatcher.add_listener("print all", EventPattern(), None)
+        # self.dispatcher.add_listener("print all", EventPattern(), None)
 
         # self.dispatcher.add_listener(
         #     "inbound state",

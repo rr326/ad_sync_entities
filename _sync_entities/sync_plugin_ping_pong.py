@@ -7,7 +7,7 @@ from _sync_entities.sync_dispatcher import EventPattern
 # pylint: disable=unused-argument
 
 
-class PingPongPlugin(Plugin):
+class PluginPingPong(Plugin):
     def initialize(self):
         self.dispatcher.add_listener(
             "ping/pong",
