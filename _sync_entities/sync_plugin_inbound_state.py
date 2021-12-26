@@ -21,7 +21,10 @@ class PluginInboundState(Plugin):
 
         self.dispatcher.add_listener(
             "inbound_state",
-            EventPattern(pattern_event_type="state"),
+            EventPattern(
+                pattern_fromhost=f"!{self.myhostname}",
+                pattern_tohost=self.myhostname,
+                pattern_event_type="state"),
             self.inbound_state_callback,
         )
 
