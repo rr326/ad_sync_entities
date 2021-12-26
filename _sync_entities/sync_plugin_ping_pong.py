@@ -22,7 +22,6 @@ class PluginPingPong(Plugin):
     def ping_callback(
         self, fromhost, tohost, event, entity, payload, payload_asobj=None
     ):
-        self.adapi.log(f"PING/PONG - event: {event}")
         self.adapi.log(
             f"PING/PONG - {self.mqtt_base_topic}/{fromhost}/{tohost}/pong - {payload} [myhostname: {self.myhostname}]"
         )

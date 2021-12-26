@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import adplus
 from appdaemon.adapi import ADAPI
@@ -17,7 +17,23 @@ class EventPattern:
     pattern_event_type: Optional[str] = None
     pattern_entity: Optional[str] = None
 
+def safe_payload_as_obj(payload: str, adapi: Optional[ADAPI]=None) -> Union[str,object]:
+    """
+    Returns:
+        json_loads(payload) (if json-able)
+    else
+        payload
+    """
 
+    try:
+        return json.loads(payload)
+    except json.JSONDecodeError:
+        return payload
+    except Exception:
+        if adapi:
+            adapi.log(f"Unexpected error trying to json decode: {payload}")
+        return payload
+        
 class EventParts:
     """
     Splits a topic string into its components.
@@ -180,19 +196,13 @@ class EventListenerDispatcher:
             )
         ]
 
-    def safe_payload_as_obj(self, payload) -> Optional[object]:
-        try:
-            return json.loads(payload)
-        except json.JSONDecodeError:
-            return None
-        except Exception:
-            self.adapi.log(f"Unexpected error trying to json decode: {payload}")
-            return None
+    def safe_payload_as_obj(self, payload: str) -> Union[str, object]:
+        return safe_payload_as_obj(payload, self.adapi)
 
     def dispatch(self, mq_event, payload) -> list:
         did_dispatch = False
         results = []
-        for name, listener in self._listeners.items():
+        for name, listener in self._listeners.items(): # pylint: disable=unused-variable
             ep = EventParts(
                 self.adapi, self.mqtt_base_topic, mq_event, listener.pattern
             )
