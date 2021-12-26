@@ -21,7 +21,7 @@ class PluginInboundState(Plugin):
 
         self.dispatcher.add_listener(
             "inbound_state",
-            EventPattern(),
+            EventPattern(pattern_event_type="state"),
             self.inbound_state_callback,
         )
 
@@ -30,6 +30,7 @@ class PluginInboundState(Plugin):
     def inbound_state_callback(
         self, fromhost, tohost, event, entity, payload, payload_asobj=None
     ):
+        self.adapi.log(f'inbound_state_callback entity: {entity}')
         (_, entity_host) = entity_split_hostname(entity)
         if entity_host is not None:
             # Should not be here - programming error
