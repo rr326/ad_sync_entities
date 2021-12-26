@@ -54,7 +54,7 @@ class PluginInboundState(Plugin):
         def state_callback(entity, attribute, old, new, kwargs):
             self.adapi.log(f"state_callback(): {entity} -- {attribute} -- {new}")
             self.mqtt.mqtt_publish(
-                topic=f"{self.mqtt_base_topic}/{self.myhostname}/state/{entity}",
+                topic=f"{self.mqtt_base_topic}/{self.myhostname}/all/state/{entity}",
                 payload=new,
                 namespace="mqtt",
             )
