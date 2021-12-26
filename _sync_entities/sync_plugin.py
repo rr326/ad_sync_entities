@@ -10,7 +10,7 @@ class Plugin:
         mqtt: mqttapi,
         dispatcher: EventListenerDispatcher,
         mqtt_base_topic: str,
-        argsn: object,
+        argsn: dict,
         myhostname: str,
     ):
         self.adapi = adapi
@@ -22,7 +22,7 @@ class Plugin:
 
         self.initialize()
 
-        self.adapi.log(f'Plugin Initialized: {self.__class__}')
+        self.adapi.log(f'Plugin Initialized: {self.__class__.__name__}')
 
     def initialize(self):
         raise NotImplementedError("Overide in inherited object")

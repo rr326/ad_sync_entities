@@ -64,13 +64,23 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
             self.get_ad_api(), self.mqtt_base_topic
         )
 
+        # Required for auto-reloading during development.
+        # Also see "global_dependencies" and "global-modules" in .yaml
+        # pylint: disable=import-outside-toplevel
         import _sync_entities.sync_plugin_ping_pong
         import _sync_entities.sync_plugin_print_all
+        import _sync_entities.sync_plugin_inbound_state
 
         reload(_sync_entities.sync_plugin_ping_pong)
         reload(_sync_entities.sync_plugin_print_all)
+        reload(_sync_entities.sync_plugin_inbound_state)
 
-        self._plugins = [_sync_entities.sync_plugin_print_all.PluginPrintAll, _sync_entities.sync_plugin_ping_pong.PluginPingPong]
+        self._plugins = [
+            _sync_entities.sync_plugin_print_all.PluginPrintAll,
+            _sync_entities.sync_plugin_ping_pong.PluginPingPong,
+            _sync_entities.sync_plugin_inbound_state.PluginInboundState,
+        ]
+
         self._plugin_handles: List[Plugin] = []
         for plugin in self._plugins:
             self._plugin_handles.append(
@@ -90,35 +100,7 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         )  # Be safe, though this will hurt other apps. Figure out.
         self.mqtt_subscribe(f"{self.mqtt_base_topic}/#", namespace="mqtt")
 
-        # Register event dispatch listeners - processing INCOMING messages
-        # self.dispatcher.add_listener("print all", EventPattern(), None)
-
-        # self.dispatcher.add_listener(
-        #     "inbound state",
-        #     EventPattern(
-        #         pattern_fromhost=f"!{self.myhostname}",  # Only listen to for events I didn't create
-        #         pattern_event_type="state",
-        #     ),
-        #     self.inbound_state_callback,
-        # )
-
-        # # Register OUTGOING messages
-        # self.run_in(self.register_state_entities, 0)
-
-        # # Register sync_servic
-        # self.run_in(self.register_sync_service, 0)
-
-        # def test_sync_service(kwargs):
-        #     self.log("***test_sync_service()***")
-        #     self.call_service(
-        #         "sync_entities_via_mqtt/toggle_state",
-        #         entity_id="light.office_seattle",
-        #         namespace="default",
-        #     )
-
-        # self.run_in(test_sync_service, 1)
-
-        # Listen to all MQ events
+        # Dispatch to all mqtt_base_topic events
         self.listen_event(
             self.mq_listener,
             "MQTT_MESSAGE",
@@ -126,83 +108,9 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
             namespace="mqtt",
         )
 
-    """
-    Entity naming / renaming.
-
-    # Constraints
-    * You need a remote entity to have a HOSTNAME suffix
-    * The suffix can only be alphanumeric characters. Symbols won't work.
-    * EXCEPT - you CAN have underscore (_) 
-        * BUT can't end with it
-        * You can not have two in a row
-    * You can only create *sensor* entities. (Actually, you can create
-      any entity, but they are read only. So sensors are more sensible.)
-
-    # Rules
-    host: seattle, entity: light.office -> sensor.light_office_seattle
-    """
-
-    def entity_add_hostname(self, entity: str, host: str) -> str:
-        """
-        light.named_light, host -> light.named_light_host
-
-        opposite: entity_split_hostname()
-        """
-
-        # Note- you can't use any symbols for the host delimiter. I tried many.
-        # 500 error
-        return f"{entity}_{host}"
-
-    def entity_split_hostname(self, entity: str) -> Tuple[str, Optional[str]]:
-        """
-        light.named_light_pihaven -> ("light.named_light", "pihaven")
-        light.local_light -> ("light.local_light", None)
-
-        opposite: entity_add_myhostname()
-        """
-        match = re.fullmatch(r"(.*)_([^#]+)", entity)
-        if match:
-            return (match.group(1), match.group(2))
-        else:
-            return (entity, None)
-
     def mq_listener(self, event, data, kwargs):
         self.log(f"mq_listener: {event}, {data}")
         self.dispatcher.dispatch(data.get("topic"), data.get("payload"))
-
-    def inbound_state_callback(
-        self, fromhost, tohost, event, entity, payload, payload_asobj=None
-    ):
-        (_, entity_host) = self.entity_split_hostname(entity)
-        if entity_host is not None:
-            # Should not be here - programming error
-            self.log(
-                f"inbound_state_callback(): Ignoring /{fromhost}/{tohost}/{event}/{entity} -- {payload}",
-                level="ERROR",
-            )
-            return
-
-        self.log(
-            f"inbound_state_callback(): set_state: /{fromhost}/{tohost}/{event}/{entity} -- {payload}"
-        )
-
-        remote_entity = self.entity_add_hostname(entity, fromhost)
-        self.log(f"inbound_callback() set_state({remote_entity}, state={payload})")
-        self.set_state(f"{remote_entity}", state=payload, namespace="default")
-
-    def register_state_entities(self, kwargs):
-        def state_callback(entity, attribute, old, new, kwargs):
-            self.log(f"state_callback(): {entity} -- {attribute} -- {new}")
-            self.mqtt_publish(
-                topic=f"{self.mqtt_base_topic}/{self.myhostname}/state/{entity}",
-                payload=new,
-                namespace="mqtt",
-            )
-
-        for entity in self.state_entities:
-            cur_state = self.get_state(entity)
-            self.log(f"** registered {entity} -- {cur_state}")
-            self._state_listeners.add(self.listen_state(state_callback, entity))
 
     def register_sync_service(self, kwargs):
         """

@@ -197,7 +197,7 @@ class EventListenerDispatcher:
                 self.adapi, self.mqtt_base_topic, mq_event, listener.pattern
             )
             if ep.matches:
-                self.adapi.log(f"dispatcher: dispatching to: {name}")
+                # self.adapi.log(f"dispatcher: dispatching to: {name}")
                 results.append(
                     listener.callback(
                         ep.fromhost,
