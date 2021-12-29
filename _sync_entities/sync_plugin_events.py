@@ -28,8 +28,27 @@ class PluginEvents(Plugin):
         self, fromhost, tohost, event, entity, payload, payload_asobj=None
     ):
         self.adapi.log(
-            f"EVENT - received: [NOT IMPLEMENTED] {fromhost}/{tohost}/{event}/{entity} data: {payload_asobj}"
+            f"EVENT - received: {fromhost}/{tohost}/{event}/{entity} data: {payload}"
         )
+        if not self.adapi.entity_exists(entity):
+            self.adapi.log(f"event_in_callback(): entity does not exist: {entity}.")
+            return
+        if payload not in ["on", "off"]:
+            self.adapi.log(f"event_in_callback(): [NOT IMPLEMENTED] - payload not in 'on', 'off'. Got: {payload}")
+            return
+
+        # Super annoying - self.adapi.set_state() does not work! It should.         
+        hass = self.mqtt.get_plugin_api("HASS")
+        if payload == "on":
+            hass.turn_on(entity_id=entity)
+        elif payload == "off":
+            hass.turn_off(entity_id=entity)
+        else:
+            self.adapi.log(f'NOT IMPLEMENTED - only turn_on and turn_off. desired state: {payload}', level="WARNING")
+            
+        if self.adapi.get_state(entity_id=entity) != payload:
+            self.adapi.log(f'event_in_callback(): Not able to set state correctly.')
+
 
     def register_sync_service(self, kwargs):
         """
@@ -105,4 +124,4 @@ class PluginEvents(Plugin):
             self.adapi.log("Calling: sync_entities_via_mqtt/toggle_state")
             self.adapi.call_service(
                 "sync_entities_via_mqtt/toggle_state", entity_id="light.office_seattle"
-            ) # pyright: reportGeneralTypeIssues=false
+            )  # pyright: reportGeneralTypeIssues=false

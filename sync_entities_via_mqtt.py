@@ -70,12 +70,14 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         import _sync_entities.sync_plugin_print_all
         import _sync_entities.sync_plugin_inbound_state
         import _sync_entities.sync_plugin_events
+        import _sync_entities.sync_dispatcher
         from importlib import reload
 
         reload(_sync_entities.sync_plugin_ping_pong)
         reload(_sync_entities.sync_plugin_print_all)
         reload(_sync_entities.sync_plugin_inbound_state)
         reload(_sync_entities.sync_plugin_events)
+        reload(_sync_entities.sync_dispatcher)
 
         self._plugins = [
             _sync_entities.sync_plugin_print_all.PluginPrintAll,
