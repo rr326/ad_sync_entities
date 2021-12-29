@@ -21,6 +21,8 @@ class PluginEvents(Plugin):
         )
 
         self.adapi.run_in(self.register_sync_service, 0)
+        
+        self.adapi.run_in(self.register_events, 0)
 
         self.adapi.run_in(self.test_event_mechanism, 0.1)
 
@@ -52,7 +54,11 @@ class PluginEvents(Plugin):
 
     def register_sync_service(self, kwargs):
         """
-        Register a service for signaling to a remote entity that it should change the state of an object
+        Register a service for signaling to a remote entity that it should change the state of an object.
+        
+        Note - this will NOT work from Hass / Dashboard directly! This only works within Appdaemon.
+        
+        Use events (see register_events) to signal from Hass / Dashboard.
 
         call_service("default", "sync_entities_via_mqtt", "set_state", {"entity_id":"sensor.light_office_pihaven","value":"on"})
         call_service("default", "sync_entities_via_mqtt", "toggle_state", {"entity_id":"sensor.light_office_pihaven"})
@@ -108,15 +114,50 @@ class PluginEvents(Plugin):
                 namespace="mqtt",
             )
 
-        self.adapi.register_service(
+        hass = self.mqtt.get_plugin_api("HASS")
+                
+        hass.register_service(
             "sync_entities_via_mqtt/change_state", sync_service_callback
         )
-        self.adapi.register_service(
+        hass.register_service(
             "sync_entities_via_mqtt/toggle_state", sync_service_callback
         )
         self.adapi.log(
             "register_service: sync_entities_via_mqtt -- change_state, toggle_state"
         )
+        
+    def register_events(self, kwargs):
+        """
+        To signal this plugin to tell a remote entity to change state, 
+        you need to go through this rigamorole:
+        
+        scripts.yaml            
+            fire_event_sync_entities_via_mqtt_toggle:
+            alias: "Fire Event - sync_entities_via_mqtt_toggle"
+            sequence:
+            - event: app.sync_entities_via_mqtt
+                event_data:
+                    action: toggle_state
+                    entity_id: "{{ data.entity_id }}"
+        
+        dashboard.yaml
+          - type: "custom:button-card"
+            entity: light.office
+            name: Test sync_entities_via_mqtt_toggle
+            show_state: true
+            tap_action:
+                action: call-service
+                service: script.fire_event_sync_entities_via_mqtt_toggle
+                service_data:
+                  entity_id: light.office_seattle
+        """
+        def event_callback(event, data, kwargs):
+            self.adapi.log(f'external event_callback(): {event} -- {data} -- {kwargs}')
+            self.adapi.call_service(f'sync_entities_via_mqtt/{data.get("action", "NO_ACTION")}', entity_id=data.get("entity_id"))
+            
+        self.adapi.listen_event(event_callback, event="app.sync_entities_via_mqtt")
+        self.adapi.log('Registered event: app.sync_entities_via_mqtt')
+    
 
     def test_event_mechanism(self, _):
         self.adapi.log("TEST event mechanism")
