@@ -23,9 +23,13 @@ Entity naming / renaming.
     * You can not have two in a row
 * You can only create *sensor* entities. (Actually, you can create
     any entity, but they are read only. So sensors are more sensible.)
+* Also I'm not sure if CAPITALLETTERS work
 
 # Rules
-host: seattle, entity: light.office -> sensor.light_office_seattle
+host: seattle, entity: light.office -> sensor.light_office_xxseattlexx
+
+why "xx" - so someone can name an entity with underscores.
+
 """
 
 def entity_add_hostname(entity: str, host: str) -> str:
@@ -37,16 +41,16 @@ def entity_add_hostname(entity: str, host: str) -> str:
 
     # Note- you can't use any symbols for the host delimiter. I tried many.
     # 500 error
-    return f"{entity}_{host}"
+    return f"{entity}_xx{host}xx"
 
 def entity_split_hostname(entity: str) -> Tuple[str, Optional[str]]:
     """
-    light.named_light_pihaven -> ("light.named_light", "pihaven")
-    light.local_light -> ("light.local_light", None)
+    light.named_light_xxpihavenxx -> ("light.named_light", "pihaven")
+    light.my_local_light -> ("light.local_light", None)
 
     opposite: entity_add_myhostname()
     """
-    match = re.fullmatch(r"(.*)_([^#]+)", entity)
+    match = re.fullmatch(r"(.*)_xx([^#]+)xx", entity)
     if match:
         return (match.group(1), match.group(2))
     else:
