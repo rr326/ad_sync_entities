@@ -2,7 +2,7 @@ from appdaemon.adapi import ADAPI
 
 from _sync_entities.sync_plugin import Plugin
 from _sync_entities.sync_dispatcher import EventPattern
-from _sync_entities.sync_utils import entity_add_hostname, entity_split_hostname
+from _sync_entities.sync_utils import entity_remote_to_local, entity_local_to_remote
 from appdaemon.plugins.mqtt.mqttapi import Mqtt as mqttapi
 from _sync_entities.sync_dispatcher import EventListenerDispatcher
 
@@ -34,8 +34,12 @@ class PluginInboundState(Plugin):
         self, fromhost, tohost, event, entity, payload, payload_asobj=None
     ):
         self.adapi.log(f'inbound_state_callback entity: {entity}')
-        (_, entity_host) = entity_split_hostname(entity)
-        if entity_host is not None:
+        try:
+            # Make sure I'm not doing something wrong and getting a remote entity like _xxSeattlexx
+            (_, _) = entity_local_to_remote(entity)
+        except ValueError:
+            pass
+        else:
             # Should not be here - programming error
             self.adapi.log(
                 f"inbound_state_callback(): Ignoring /{fromhost}/{tohost}/{event}/{entity} -- {payload}",
@@ -47,7 +51,7 @@ class PluginInboundState(Plugin):
             f"inbound_state_callback(): set_state: /{fromhost}/{tohost}/{event}/{entity} -- {payload}"
         )
 
-        remote_entity = entity_add_hostname(entity, fromhost)
+        remote_entity = entity_remote_to_local(entity, fromhost)
         self.adapi.log(
             f"inbound_callback() set_state({remote_entity}, state={payload})"
         )

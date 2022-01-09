@@ -3,7 +3,7 @@ from appdaemon.plugins.mqtt import mqttapi as mqtt
 
 from _sync_entities.sync_plugin import Plugin
 from _sync_entities.sync_dispatcher import EventPattern
-from _sync_entities.sync_utils import entity_add_hostname, entity_split_hostname
+from _sync_entities.sync_utils import entity_remote_to_local, entity_local_to_remote
 
 # pylint: disable=unused-argument
 
@@ -85,7 +85,7 @@ class PluginEvents(Plugin):
 
             local_entity = kwargs["entity_id"]
 
-            (remote_entity, remote_host) = entity_split_hostname(local_entity)
+            (remote_entity, remote_host) = entity_local_to_remote(local_entity)
             if remote_host is None:
                 raise RuntimeError(
                     f"Programming error - invalid remote_entity_id: {local_entity}"

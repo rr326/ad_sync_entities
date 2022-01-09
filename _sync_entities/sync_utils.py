@@ -32,26 +32,33 @@ why "xx" - so someone can name an entity with underscores.
 
 """
 
-def entity_add_hostname(entity: str, host: str) -> str:
+def entity_remote_to_local(remote_entity: str, host: str) -> str:
     """
-    light.named_light, host -> light.named_light_host
+    light.named_light, host -> sensor.light_named_light_host
 
-    opposite: entity_split_hostname()
+    opposite: entity_local_to_remote()
     """
 
     # Note- you can't use any symbols for the host delimiter. I tried many.
     # 500 error
-    return f"{entity}_xx{host}xx"
+    platform, sep, entity_name = remote_entity.partition(".")
+    if sep == "":
+        raise ValueError(f'Invalid format for remote_entity: {remote_entity}')
+    if re.match(" |_", platform):
+        raise NotImplementedError(f'Got a space or _ in remote_entity platform (stuff before the dot): {remote_entity}')
+    return f"sensor.{platform}_{entity_name}_xx{host}xx"
 
-def entity_split_hostname(entity: str) -> Tuple[str, Optional[str]]:
+def entity_local_to_remote(local_entity: str) -> Tuple[str, str]:
     """
-    light.named_light_xxpihavenxx -> ("light.named_light", "pihaven")
-    light.my_local_light -> ("light.local_light", None)
+    sensor_light_named_light_xxpihavenxx -> ("light.named_light", "pihaven")
+    light.my_local_light -> ValueError()
 
-    opposite: entity_add_myhostname()
+    opposite: entity_remote_to_local()
     """
-    match = re.fullmatch(r"(.*)_xx([^#]+)xx", entity)
-    if match:
-        return (match.group(1), match.group(2))
-    else:
-        return (entity, None)
+    match = re.fullmatch(r"sensor.(?P<platform>[^_]*)_(?P<entity>.*)_xx(?P<host>[^#]+)xx", local_entity)
+    if not match:
+        raise ValueError(f'Invalid format for entity_local_to_remote: {local_entity}')
+        
+    remote_entity = f'{match.group("platform")}.{match.group("entity")}'
+    return (remote_entity, match.group("host"))
+        
