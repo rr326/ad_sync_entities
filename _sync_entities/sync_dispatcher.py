@@ -81,12 +81,12 @@ class EventParts:
     def _do_split(self):
         parts = self.event.split("/")
         if len(parts) < 4 or len(parts) > 5:
-            self.adapi.log(f"match failed - improper format: {self.event}")
+            self.adapi.log(f"match failed - improper format: {self.event}", level="WARNING")
             return False
 
         if parts[0] != self.mqtt_base_topic:
             self.adapi.log(
-                f"split failed - does not start with {self.mqtt_base_topic}: {self.event}"
+                f"split failed - does not start with {self.mqtt_base_topic}: {self.event}", level="WARNING"
             )
             return False
 
@@ -192,7 +192,7 @@ class EventListenerDispatcher:
     ) -> list:
         return [
             self.adapi.log(
-                f"default_callback: {fromhost}/{tohost}/{event_type}/{entity} -- {payload}"
+                f"default_callback: {fromhost}/{tohost}/{event_type}/{entity} -- {payload}", level="DEBUG"
             )
         ]
 
@@ -200,6 +200,7 @@ class EventListenerDispatcher:
         return safe_payload_as_obj(payload, self.adapi)
 
     def dispatch(self, mq_event, payload) -> list:
+        self.adapi.log(f'dispatching mq_event: {mq_event} -- {payload}')
         did_dispatch = False
         results = []
         for name, listener in self._listeners.items(): # pylint: disable=unused-variable
@@ -207,7 +208,7 @@ class EventListenerDispatcher:
                 self.adapi, self.mqtt_base_topic, mq_event, listener.pattern
             )
             if ep.matches:
-                # self.adapi.log(f"dispatcher: dispatching to: {name}")
+                # self.adapi.log(f"dispatcher: dispatching to: {name}", level="DEBUG")
                 results.append(
                     listener.callback(
                         ep.fromhost,

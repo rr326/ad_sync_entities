@@ -22,7 +22,7 @@ class Plugin:
 
         self.initialize()
 
-        self.adapi.log(f'Plugin Initialized: {self.__class__.__name__}')
+        self.adapi.log(f'Plugin Initialized: {self.__class__.__name__}', level="DEBUG")
 
     def initialize(self):
         raise NotImplementedError("Overide in inherited object")

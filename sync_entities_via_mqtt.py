@@ -116,5 +116,5 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         )
 
     def mq_listener(self, event, data, kwargs):
-        self.log(f"mq_listener: {event}, {data}")
+        self.log(f"mq_listener: {event}, {data}", level="DEBUG")
         self.dispatcher.dispatch(data.get("topic"), data.get("payload"))

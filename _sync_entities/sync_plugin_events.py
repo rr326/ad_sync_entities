@@ -38,16 +38,16 @@ class PluginEvents(Plugin):
 
             """
             self.adapi.log(
-                f"EVENT - received: {fromhost}/{tohost}/{event}/{entity} data: {payload}"
+                f"EVENT - received: {fromhost}/{tohost}/{event}/{entity} data: {payload}", level="DEBUG"
             )
             if not self.adapi.entity_exists(entity):
                 self.adapi.log(
-                    f"callback_inbound_event(): entity does not exist: {entity}."
+                    f"callback_inbound_event(): entity does not exist: {entity}.", level="WARNING"
                 )
                 return
             if event != "event":
                 self.adapi.log(
-                    f"callback_inbound_event(): [NOT IMPLEMENTED] - got unexpected event: {event}"
+                    f"callback_inbound_event(): [NOT IMPLEMENTED] - got unexpected event: {event}", level="WARNING"
                 )
                 return
             try:
@@ -56,7 +56,7 @@ class PluginEvents(Plugin):
                 pass
             else:
                 self.adapi.log(
-                    f"callback_inbound_event(): [NOT IMPLEMENTED] - got JSON payload. Currently only accept simple states: |{payload}|"
+                    f"callback_inbound_event(): [NOT IMPLEMENTED] - got JSON payload. Currently only accept simple states: |{payload}|", level="WARNING"
                 )
                 return
 
@@ -99,7 +99,7 @@ class PluginEvents(Plugin):
             namespace: str, service: str, action: str, kwargs
         ) -> None:
             self.adapi.log(
-                f"sync_service_callback(namespace={namespace}, service={service}, action={action}, kwargs={kwargs})"
+                f"sync_service_callback(namespace={namespace}, service={service}, action={action}, kwargs={kwargs})", level="DEBUG"
             )
 
             if (
@@ -151,7 +151,7 @@ class PluginEvents(Plugin):
             "sync_entities_via_mqtt/toggle_state", callback_outbound_service
         )
         self.adapi.log(
-            "register_service: sync_entities_via_mqtt -- set_state, toggle_state"
+            "register_service: sync_entities_via_mqtt -- set_state, toggle_state", level="DEBUG"
         )
 
     def register_outbound_event(self, kwargs):
@@ -181,7 +181,7 @@ class PluginEvents(Plugin):
         """
 
         def callback_outbound_event(event, data, kwargs):
-            self.adapi.log(f"callback_outbound_event(): {event} -- {data} -- {kwargs}")
+            self.adapi.log(f"callback_outbound_event(): {event} -- {data} -- {kwargs}", level="DEBUG")
             self.adapi.call_service(
                 f'sync_entities_via_mqtt/{data.get("action", "NO_ACTION")}',
                 entity_id=data.get("entity_id"),
@@ -191,7 +191,7 @@ class PluginEvents(Plugin):
         self.adapi.listen_event(
             callback_outbound_event, event="app.sync_entities_via_mqtt"
         )
-        self.adapi.log("Registered event: app.sync_entities_via_mqtt")
+        self.adapi.log("Registered event: app.sync_entities_via_mqtt", level="DEBUG")
 
     def test_event_mechanism(self, _):
         self.adapi.log("TEST event mechanism")
