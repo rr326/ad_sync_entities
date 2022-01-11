@@ -1,9 +1,6 @@
-from appdaemon.adapi import ADAPI
-
-from _sync_entities.sync_plugin import Plugin
 from _sync_entities.sync_dispatcher import EventPattern
-from _sync_entities.sync_utils import entity_remote_to_local, entity_local_to_remote
-
+from _sync_entities.sync_plugin import Plugin
+from _sync_entities.sync_utils import entity_local_to_remote, entity_remote_to_local
 
 # pylint: disable=unused-argument
 
@@ -48,18 +45,22 @@ class PluginInboundState(Plugin):
             return
 
         self.adapi.log(
-            f"inbound_state_callback(): set_state: /{fromhost}/{tohost}/{event}/{entity} -- {payload}", level="DEBUG"
+            f"inbound_state_callback(): set_state: /{fromhost}/{tohost}/{event}/{entity} -- {payload}",
+            level="DEBUG",
         )
 
         remote_entity = entity_remote_to_local(entity, fromhost)
         self.adapi.log(
-            f"inbound_callback() set_state({remote_entity}, state={payload})", level="DEBUG"
+            f"inbound_callback() set_state({remote_entity}, state={payload})",
+            level="DEBUG",
         )
         self.adapi.set_state(f"{remote_entity}", state=payload, namespace="default")
 
     def register_state_entities(self, kwargs):
         def state_callback(entity, attribute, old, new, kwargs):
-            self.adapi.log(f"state_callback(): {entity} -- {attribute} -- {new}", level="DEBUG")
+            self.adapi.log(
+                f"state_callback(): {entity} -- {attribute} -- {new}", level="DEBUG"
+            )
             self.mqtt.mqtt_publish(
                 topic=f"{self.mqtt_base_topic}/{self.myhostname}/all/state/{entity}",
                 payload=new,

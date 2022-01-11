@@ -1,12 +1,13 @@
 from appdaemon.plugins.mqtt import mqttapi as mqtt
 
-# pylint: disable=unused-argument,use-implicit-booleaness-not-comparison
-
 from _sync_entities.sync_dispatcher import (
     EventListenerDispatcher,
     EventParts,
     EventPattern,
 )
+
+# pylint: disable=unused-argument,use-implicit-booleaness-not-comparison
+
 
 MQTT_DEFAULT_BASE_TOPIC = "mqtt_shared"
 

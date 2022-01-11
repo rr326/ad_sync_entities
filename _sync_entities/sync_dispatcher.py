@@ -17,7 +17,10 @@ class EventPattern:
     pattern_event_type: Optional[str] = None
     pattern_entity: Optional[str] = None
 
-def safe_payload_as_obj(payload: str, adapi: Optional[ADAPI]=None) -> Union[str,object]:
+
+def safe_payload_as_obj(
+    payload: str, adapi: Optional[ADAPI] = None
+) -> Union[str, object]:
     """
     Returns:
         json_loads(payload) (if json-able)
@@ -33,7 +36,8 @@ def safe_payload_as_obj(payload: str, adapi: Optional[ADAPI]=None) -> Union[str,
         if adapi:
             adapi.log(f"Unexpected error trying to json decode: {payload}")
         return payload
-        
+
+
 class EventParts:
     """
     Splits a topic string into its components.
@@ -81,12 +85,15 @@ class EventParts:
     def _do_split(self):
         parts = self.event.split("/")
         if len(parts) < 4 or len(parts) > 5:
-            self.adapi.log(f"match failed - improper format: {self.event}", level="WARNING")
+            self.adapi.log(
+                f"match failed - improper format: {self.event}", level="WARNING"
+            )
             return False
 
         if parts[0] != self.mqtt_base_topic:
             self.adapi.log(
-                f"split failed - does not start with {self.mqtt_base_topic}: {self.event}", level="WARNING"
+                f"split failed - does not start with {self.mqtt_base_topic}: {self.event}",
+                level="WARNING",
             )
             return False
 
@@ -109,7 +116,7 @@ class EventParts:
         pattern=="all" --> True
         """
         if pattern is None:
-            return True 
+            return True
         if special_all:
             if pattern == "all":
                 return True
@@ -192,7 +199,8 @@ class EventListenerDispatcher:
     ) -> list:
         return [
             self.adapi.log(
-                f"default_callback: {fromhost}/{tohost}/{event_type}/{entity} -- {payload}", level="DEBUG"
+                f"default_callback: {fromhost}/{tohost}/{event_type}/{entity} -- {payload}",
+                level="DEBUG",
             )
         ]
 
@@ -200,10 +208,13 @@ class EventListenerDispatcher:
         return safe_payload_as_obj(payload, self.adapi)
 
     def dispatch(self, mq_event, payload) -> list:
-        self.adapi.log(f'dispatching mq_event: {mq_event} -- {payload}')
+        self.adapi.log(f"dispatching mq_event: {mq_event} -- {payload}")
         did_dispatch = False
         results = []
-        for name, listener in self._listeners.items(): # pylint: disable=unused-variable
+        for (
+            name,
+            listener,
+        ) in self._listeners.items():  # pylint: disable=unused-variable
             ep = EventParts(
                 self.adapi, self.mqtt_base_topic, mq_event, listener.pattern
             )

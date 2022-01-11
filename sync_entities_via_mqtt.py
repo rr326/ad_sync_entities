@@ -1,11 +1,9 @@
-import re
-from typing import Optional, Tuple, List
+from typing import List
 
 import adplus
 from appdaemon.plugins.mqtt import mqttapi as mqtt
 
-
-from _sync_entities.sync_dispatcher import EventListenerDispatcher, EventPattern
+from _sync_entities.sync_dispatcher import EventListenerDispatcher
 from _sync_entities.sync_plugin import Plugin
 
 # pylint: disable=unused-argument
@@ -66,13 +64,14 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
         # Required for auto-reloading during development.
         # Also see "global_dependencies" and "global-modules" in .yaml
         # pylint: disable=import-outside-toplevel
+        from importlib import reload
+
+        import _sync_entities.sync_dispatcher
+        import _sync_entities.sync_plugin_events
+        import _sync_entities.sync_plugin_inbound_state
         import _sync_entities.sync_plugin_ping_pong
         import _sync_entities.sync_plugin_print_all
-        import _sync_entities.sync_plugin_inbound_state
-        import _sync_entities.sync_plugin_events
-        import _sync_entities.sync_dispatcher
         import _sync_entities.sync_utils
-        from importlib import reload
 
         reload(_sync_entities.sync_plugin_ping_pong)
         reload(_sync_entities.sync_plugin_print_all)
@@ -85,7 +84,7 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
             _sync_entities.sync_plugin_print_all.PluginPrintAll,
             _sync_entities.sync_plugin_ping_pong.PluginPingPong,
             _sync_entities.sync_plugin_inbound_state.PluginInboundState,
-            _sync_entities.sync_plugin_events.PluginEvents
+            _sync_entities.sync_plugin_events.PluginEvents,
         ]
 
         self._plugin_handles: List[Plugin] = []

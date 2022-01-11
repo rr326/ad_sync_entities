@@ -1,12 +1,5 @@
 import re
-from typing import Optional, Tuple, List
-from importlib import reload
-
-import adplus
-from appdaemon.plugins.mqtt import mqttapi as mqtt
-
-from _sync_entities.sync_dispatcher import EventListenerDispatcher, EventPattern
-from _sync_entities.sync_plugin import Plugin
+from typing import Tuple
 
 # pylint: disable=unused-argument
 

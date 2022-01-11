@@ -1,5 +1,6 @@
 from appdaemon.adapi import ADAPI
 from appdaemon.plugins.mqtt.mqttapi import Mqtt as mqttapi
+
 from _sync_entities.sync_dispatcher import EventListenerDispatcher
 
 
@@ -22,7 +23,7 @@ class Plugin:
 
         self.initialize()
 
-        self.adapi.log(f'Plugin Initialized: {self.__class__.__name__}', level="DEBUG")
+        self.adapi.log(f"Plugin Initialized: {self.__class__.__name__}", level="DEBUG")
 
     def initialize(self):
         raise NotImplementedError("Overide in inherited object")
