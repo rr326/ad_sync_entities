@@ -1,5 +1,8 @@
+import json
+from typing import Optional
 from appdaemon.adapi import ADAPI
 from appdaemon.plugins.mqtt import mqttapi as mqtt
+from appdaemon.plugins.hass.hassplugin import HassPlugin
 
 from _sync_entities.sync_plugin import Plugin
 from _sync_entities.sync_dispatcher import EventPattern
@@ -10,6 +13,63 @@ from _sync_entities.sync_utils import entity_remote_to_local, entity_local_to_re
 
 class PluginEvents(Plugin):
     def initialize(self):
+        self.adapi.run_in(
+            self.register_inbound_event, 0
+        )  # EG: mqtt_shared/haven/seattle/event/light.office off
+        self.adapi.run_in(
+            self.register_outbound_service, 0
+        )  # EG: call_service("default", "sync_entities_via_mqtt", "set_state", {"entity_id":"sensor.light_office_pihaven","value":"on"})
+        self.adapi.run_in(
+            self.register_outbound_event, 0
+        )  # EG: dashboard: fire-event(app.sync_entities_via_mqtt, action, payload)
+        # self.adapi.run_in(self.test_event_mechanism, 0.1)
+
+    def register_inbound_event(self, kwargs):
+        def callback_inbound_event(
+            fromhost, tohost, event, entity, payload, payload_asobj=None
+        ):
+            """
+            Act on an event received from a remote host:
+
+                mqtt_shared/haven/seattle/event/light.office off
+
+            event == "event"
+            payload == desired state
+
+            """
+            self.adapi.log(
+                f"EVENT - received: {fromhost}/{tohost}/{event}/{entity} data: {payload}"
+            )
+            if not self.adapi.entity_exists(entity):
+                self.adapi.log(
+                    f"callback_inbound_event(): entity does not exist: {entity}."
+                )
+                return
+            if event != "event":
+                self.adapi.log(
+                    f"callback_inbound_event(): [NOT IMPLEMENTED] - got unexpected event: {event}"
+                )
+                return
+            try:
+                _ = json.loads(payload)
+            except json.JSONDecodeError:
+                pass
+            else:
+                self.adapi.log(
+                    f"callback_inbound_event(): [NOT IMPLEMENTED] - got JSON payload. Currently only accept simple states: |{payload}|"
+                )
+                return
+
+            # Do it
+            _inbound_take_hass_action(
+                self.adapi,
+                self.mqtt.get_plugin_api("HASS"),
+                event,
+                entity,
+                payload,
+                payload_asobj,
+            )
+
         self.dispatcher.add_listener(
             "event_in",
             EventPattern(
@@ -17,47 +77,15 @@ class PluginEvents(Plugin):
                 pattern_tohost=f"{self.myhostname}",
                 pattern_event_type="event",
             ),
-            self.event_in_callback,
+            callback_inbound_event,
         )
 
-        self.adapi.run_in(self.register_sync_service, 0)
-        
-        self.adapi.run_in(self.register_events, 0)
-
-        self.adapi.run_in(self.test_event_mechanism, 0.1)
-
-    def event_in_callback(
-        self, fromhost, tohost, event, entity, payload, payload_asobj=None
-    ):
-        self.adapi.log(
-            f"EVENT - received: {fromhost}/{tohost}/{event}/{entity} data: {payload}"
-        )
-        if not self.adapi.entity_exists(entity):
-            self.adapi.log(f"event_in_callback(): entity does not exist: {entity}.")
-            return
-        if payload not in ["on", "off"]:
-            self.adapi.log(f"event_in_callback(): [NOT IMPLEMENTED] - payload not in 'on', 'off'. Got: {payload}")
-            return
-
-        # Super annoying - self.adapi.set_state() does not work! It should.         
-        hass = self.mqtt.get_plugin_api("HASS")
-        if payload == "on":
-            hass.turn_on(entity_id=entity)
-        elif payload == "off":
-            hass.turn_off(entity_id=entity)
-        else:
-            self.adapi.log(f'NOT IMPLEMENTED - only turn_on and turn_off. desired state: {payload}', level="WARNING")
-            
-        if self.adapi.get_state(entity_id=entity) != payload:
-            self.adapi.log(f'event_in_callback(): Not able to set state correctly.')
-
-
-    def register_sync_service(self, kwargs):
+    def register_outbound_service(self, kwargs):
         """
         Register a service for signaling to a remote entity that it should change the state of an object.
-        
+
         Note - this will NOT work from Hass / Dashboard directly! This only works within Appdaemon.
-        
+
         Use events (see register_events) to signal from Hass / Dashboard.
 
         call_service("default", "sync_entities_via_mqtt", "set_state", {"entity_id":"sensor.light_office_pihaven","value":"on"})
@@ -67,7 +95,7 @@ class PluginEvents(Plugin):
             mqtt_publish("mqtt_shared/pihaven/state", payload="on")
         """
 
-        def sync_service_callback(
+        def callback_outbound_service(
             namespace: str, service: str, action: str, kwargs
         ) -> None:
             self.adapi.log(
@@ -115,23 +143,23 @@ class PluginEvents(Plugin):
             )
 
         hass = self.mqtt.get_plugin_api("HASS")
-                
+
         hass.register_service(
-            "sync_entities_via_mqtt/change_state", sync_service_callback
+            "sync_entities_via_mqtt/change_state", callback_outbound_service
         )
         hass.register_service(
-            "sync_entities_via_mqtt/toggle_state", sync_service_callback
+            "sync_entities_via_mqtt/toggle_state", callback_outbound_service
         )
         self.adapi.log(
             "register_service: sync_entities_via_mqtt -- change_state, toggle_state"
         )
-        
-    def register_events(self, kwargs):
+
+    def register_outbound_event(self, kwargs):
         """
-        To signal this plugin to tell a remote entity to change state, 
+        To signal this plugin to tell a remote entity to change state,
         you need to go through this rigamorole:
-        
-        scripts.yaml            
+
+        scripts.yaml
             fire_event_sync_entities_via_mqtt_toggle:
             alias: "Fire Event - sync_entities_via_mqtt_toggle"
             sequence:
@@ -139,7 +167,7 @@ class PluginEvents(Plugin):
                 event_data:
                     action: toggle_state
                     entity_id: "{{ data.entity_id }}"
-        
+
         dashboard.yaml
           - type: "custom:button-card"
             entity: light.office
@@ -151,13 +179,18 @@ class PluginEvents(Plugin):
                 service_data:
                   entity_id: light.office_seattle
         """
-        def event_callback(event, data, kwargs):
-            self.adapi.log(f'external event_callback(): {event} -- {data} -- {kwargs}')
-            self.adapi.call_service(f'sync_entities_via_mqtt/{data.get("action", "NO_ACTION")}', entity_id=data.get("entity_id"))
-            
-        self.adapi.listen_event(event_callback, event="app.sync_entities_via_mqtt")
-        self.adapi.log('Registered event: app.sync_entities_via_mqtt')
-    
+
+        def callback_outbound_event(event, data, kwargs):
+            self.adapi.log(f"callback_outbound_event(): {event} -- {data} -- {kwargs}")
+            self.adapi.call_service(
+                f'sync_entities_via_mqtt/{data.get("action", "NO_ACTION")}',
+                entity_id=data.get("entity_id"),
+            )
+
+        self.adapi.listen_event(
+            callback_outbound_event, event="app.sync_entities_via_mqtt"
+        )
+        self.adapi.log("Registered event: app.sync_entities_via_mqtt")
 
     def test_event_mechanism(self, _):
         self.adapi.log("TEST event mechanism")
@@ -166,3 +199,61 @@ class PluginEvents(Plugin):
             self.adapi.call_service(
                 "sync_entities_via_mqtt/toggle_state", entity_id="light.office_seattle"
             )  # pyright: reportGeneralTypeIssues=false
+
+
+def _inbound_take_hass_action(
+    adapi: ADAPI,
+    hass: HassPlugin,
+    event: str,
+    entity: str,
+    payload: str,
+    payload_asobj: Optional[dict] = None,
+):
+    """
+    Given and entity, and a state, take an appropriate action.
+
+    EG:
+    "light.office", "on" --> hass.turn_on("light.office")
+    "input_select.home_mode", "Away" --> hass.select_option("input_select.home_mode", "Away")
+
+
+    Dev Notes:
+
+    * Unfortunately, you can NOT simply set the state on an entity.
+    * If you do that, it WILL set the state, but it will NOT change the underlying Hass device.
+    """
+    platform, sep, _ = entity.partition(".")
+    if not sep:
+        adapi.log(
+            f"_inbound_take_hass_action(): entity of improper format: {entity}",
+            level="WARNING",
+        )
+        return
+
+    if platform in ["light", "switch", "scene", "script"]:
+        if payload == "on":
+            hass.turn_on(entity_id=entity)
+        elif payload == "off":
+            hass.turn_off(entity_id=entity)
+        else:
+            adapi.log(
+                f"_inbound_take_hass_action(): unexpected state for entity: {entity} -- {payload}",
+                level="WARNING",
+            )
+    elif platform == "input_number":
+        hass.set_value(entity, payload)
+    elif platform == "input_text":
+        hass.set_textvalue(entity, payload)
+    elif platform == "input_select":
+        hass.select_option(entity, payload)
+    else:
+        adapi.log(
+            f"_inbound_take_hass_action(): NOT IMPLEMENTED: Unexpected platform for entity: {entity}",
+            level="WARNING",
+        )
+        return
+
+    if adapi.get_state(entity_id=entity) != payload:
+        adapi.log(
+            f"event_in_callback(): Not able to set state correctly.", level="WARNING"
+        )
