@@ -1,10 +1,9 @@
 import re
 from typing import Optional, Tuple, List
+from importlib import reload
 
 import adplus
 from appdaemon.plugins.mqtt import mqttapi as mqtt
-from importlib import reload
-
 
 from _sync_entities.sync_dispatcher import EventListenerDispatcher, EventPattern
 from _sync_entities.sync_plugin import Plugin
@@ -32,6 +31,7 @@ why "xx" - so someone can name an entity with underscores.
 
 """
 
+
 def entity_remote_to_local(remote_entity: str, host: str) -> str:
     """
     light.named_light, host -> sensor.light_named_light_host
@@ -43,10 +43,13 @@ def entity_remote_to_local(remote_entity: str, host: str) -> str:
     # 500 error
     platform, sep, entity_name = remote_entity.partition(".")
     if sep == "":
-        raise ValueError(f'Invalid format for remote_entity: {remote_entity}')
+        raise ValueError(f"Invalid format for remote_entity: {remote_entity}")
     if re.match(" |_", platform):
-        raise NotImplementedError(f'Got a space or _ in remote_entity platform (stuff before the dot): {remote_entity}')
+        raise NotImplementedError(
+            f"Got a space or _ in remote_entity platform (stuff before the dot): {remote_entity}"
+        )
     return f"sensor.{platform}_{entity_name}_xx{host}xx"
+
 
 def entity_local_to_remote(local_entity: str) -> Tuple[str, str]:
     """
@@ -55,10 +58,12 @@ def entity_local_to_remote(local_entity: str) -> Tuple[str, str]:
 
     opposite: entity_remote_to_local()
     """
-    match = re.fullmatch(r"sensor.(?P<platform>[^_]*)_(?P<entity>.*)_xx(?P<host>[^#]+)xx", local_entity)
+    match = re.fullmatch(
+        r"sensor.(?P<platform>(input_(select|number|text|datetime|boolean)|[^_]*))_(?P<entity>.*)_xx(?P<host>[^#]+)xx",
+        local_entity,
+    )
     if not match:
-        raise ValueError(f'Invalid format for entity_local_to_remote: {local_entity}')
-        
+        raise ValueError(f"Invalid format for entity_local_to_remote: {local_entity}")
+
     remote_entity = f'{match.group("platform")}.{match.group("entity")}'
     return (remote_entity, match.group("host"))
-        

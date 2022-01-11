@@ -88,7 +88,7 @@ class PluginEvents(Plugin):
 
         Use events (see register_events) to signal from Hass / Dashboard.
 
-        call_service("default", "sync_entities_via_mqtt", "set_state", {"entity_id":"sensor.light_office_pihaven","value":"on"})
+        call_service("default", "sync_entities_via_mqtt", "set_state", {"entity_id":"sensor.light_office_pihaven","state":"on"})
         call_service("default", "sync_entities_via_mqtt", "toggle_state", {"entity_id":"sensor.light_office_pihaven"})
 
         What it does:
@@ -120,7 +120,7 @@ class PluginEvents(Plugin):
                 )
 
             if action == "set_state":
-                value = kwargs["value"]
+                value = kwargs["state"]
             elif action == "toggle_state":
                 if not self.adapi.entity_exists(local_entity):
                     raise RuntimeError(f"entity does not exist: {local_entity}")
@@ -145,13 +145,13 @@ class PluginEvents(Plugin):
         hass = self.mqtt.get_plugin_api("HASS")
 
         hass.register_service(
-            "sync_entities_via_mqtt/change_state", callback_outbound_service
+            "sync_entities_via_mqtt/set_state", callback_outbound_service
         )
         hass.register_service(
             "sync_entities_via_mqtt/toggle_state", callback_outbound_service
         )
         self.adapi.log(
-            "register_service: sync_entities_via_mqtt -- change_state, toggle_state"
+            "register_service: sync_entities_via_mqtt -- set_state, toggle_state"
         )
 
     def register_outbound_event(self, kwargs):
@@ -185,6 +185,7 @@ class PluginEvents(Plugin):
             self.adapi.call_service(
                 f'sync_entities_via_mqtt/{data.get("action", "NO_ACTION")}',
                 entity_id=data.get("entity_id"),
+                state=data.get("state"),
             )
 
         self.adapi.listen_event(

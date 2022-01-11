@@ -3,8 +3,7 @@ from appdaemon.adapi import ADAPI
 from _sync_entities.sync_plugin import Plugin
 from _sync_entities.sync_dispatcher import EventPattern
 from _sync_entities.sync_utils import entity_remote_to_local, entity_local_to_remote
-from appdaemon.plugins.mqtt.mqttapi import Mqtt as mqttapi
-from _sync_entities.sync_dispatcher import EventListenerDispatcher
+
 
 # pylint: disable=unused-argument
 
@@ -24,7 +23,8 @@ class PluginInboundState(Plugin):
             EventPattern(
                 pattern_fromhost=f"!{self.myhostname}",
                 pattern_tohost=self.myhostname,
-                pattern_event_type="state"),
+                pattern_event_type="state",
+            ),
             self.inbound_state_callback,
         )
 
@@ -33,7 +33,7 @@ class PluginInboundState(Plugin):
     def inbound_state_callback(
         self, fromhost, tohost, event, entity, payload, payload_asobj=None
     ):
-        self.adapi.log(f'inbound_state_callback entity: {entity}')
+        self.adapi.log(f"inbound_state_callback entity: {entity}")
         try:
             # Make sure I'm not doing something wrong and getting a remote entity like _xxSeattlexx
             (_, _) = entity_local_to_remote(entity)
