@@ -1,7 +1,6 @@
+from _sync_entities.sync_dispatcher import EventListenerDispatcher
 from appdaemon.adapi import ADAPI
 from appdaemon.plugins.mqtt.mqttapi import Mqtt as mqttapi
-
-from _sync_entities.sync_dispatcher import EventListenerDispatcher
 
 
 class Plugin:

@@ -1,12 +1,11 @@
 import json
 from typing import Optional
 
-from appdaemon.adapi import ADAPI
-from appdaemon.plugins.hass.hassplugin import HassPlugin
-
 from _sync_entities.sync_dispatcher import EventPattern
 from _sync_entities.sync_plugin import Plugin
 from _sync_entities.sync_utils import entity_local_to_remote
+from appdaemon.adapi import ADAPI
+from appdaemon.plugins.hass.hassplugin import HassPlugin
 
 # pylint: disable=unused-argument
 

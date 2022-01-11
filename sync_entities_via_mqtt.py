@@ -1,10 +1,9 @@
 from typing import List
 
 import adplus
-from appdaemon.plugins.mqtt import mqttapi as mqtt
-
 from _sync_entities.sync_dispatcher import EventListenerDispatcher
 from _sync_entities.sync_plugin import Plugin
+from appdaemon.plugins.mqtt import mqttapi as mqtt
 
 # pylint: disable=unused-argument
 

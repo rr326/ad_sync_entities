@@ -1,10 +1,9 @@
-from appdaemon.plugins.mqtt import mqttapi as mqtt
-
 from _sync_entities.sync_dispatcher import (
     EventListenerDispatcher,
     EventParts,
     EventPattern,
 )
+from appdaemon.plugins.mqtt import mqttapi as mqtt
 
 # pylint: disable=unused-argument,use-implicit-booleaness-not-comparison
 
