@@ -1,19 +1,29 @@
 global_modules:
-  - plugin_ping_pong
-  - dispatcher
-  - sync_plugin
+    - sync_dispatcher
+    - sync_utils
+    - sync_plugin
+    - sync_plugin_print_all
+    - sync_plugin_ping_pong
+    - sync_plugin_inbound_state
+    - sync_plugin_events
 
 SyncEntitiesViaMqtt:
   module: sync_entities_via_mqtt
   class: SyncEntitiesViaMqtt
-  myhostname: haven # no dashes
+  myhostname: seattle # no dashes
   state_for_entities:
-      - input_select.home_state 
+      - light.entity1
+      - input_select.entity2
   disable: false
+  log_level: DEBUG # INFO once tested.
   global_dependencies:
-    - plugin_ping_pong
-    - dispatcher
+    - sync_dispatcher
+    - sync_utils
     - sync_plugin
+    - sync_plugin_print_all
+    - sync_plugin_ping_pong
+    - sync_plugin_inbound_state
+    - sync_plugin_events
 
 TestSyncEntitiesViaMqtt:
   module: test_sync_entities
@@ -21,3 +31,11 @@ TestSyncEntitiesViaMqtt:
   disable: true
   dependencies: 
     - SyncEntitiesViaMqtt
+  global_dependencies:
+    - sync_dispatcher
+    - sync_utils
+    - sync_plugin
+    - sync_plugin_print_all
+    - sync_plugin_ping_pong
+    - sync_plugin_inbound_state
+    - sync_plugin_events
