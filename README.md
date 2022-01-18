@@ -28,6 +28,16 @@ With SyncEntities, here is how it would work:
 * Of course, this new state at Home will be properly propagated to 
   and displayed at Office. 
 
+# Try This First
+This app is complicated, and it turns out HA has some functionality that
+might do it almost or just as well, but with off-the-shelf components. 
+
+Read:
+
+* [Custom component in HA](https://github.com/koying/mqtt_discoverystream_ha)
+* [MQTT Statestream](https://www.home-assistant.io/integrations/mqtt_statestream/)
+* [MQTT Discovery](https://www.home-assistant.io/docs/mqtt/discovery)
+
 # Disclaimer: The Bad and the Ugly
 SyncEntities works really well, but it's non-trivial to use. There is
 likely a less elegant, but far easier, way to achieve your aims, more or less.
