@@ -35,11 +35,12 @@ class PluginPingPong(Plugin):
         self.adapi.run_in(self.register_ping_service, 0)
 
         # Testing
-        self.adapi.run_in(self.test_ping_pong_service, 0)
+        # self.adapi.run_in(self.test_ping_pong_service, 0)
 
     def cb_ping(self, fromhost, tohost, event, entity, payload, payload_asobj=None):
         self.adapi.log(
-            f"PING - {self.mqtt_base_topic}/{fromhost}/{tohost}/pong - {payload} [myhostname: {self.myhostname}]"
+            f"PING - {self.mqtt_base_topic}/{fromhost}/{tohost}/pong - {payload} [myhostname: {self.myhostname}]",
+            level="DEBUG",
         )
         self.mqtt.mqtt_publish(
             topic=f"{self.mqtt_base_topic}/{self.myhostname}/{fromhost}/pong",
@@ -50,11 +51,11 @@ class PluginPingPong(Plugin):
     def cb_pong(self, fromhost, tohost, event, entity, payload, payload_asobj=None):
         self.adapi.log(
             f"PONG - {self.mqtt_base_topic}/{fromhost}/{tohost}/pong - {payload}",
-            level="INFO",
+            level="DEBUG",
         )
         key = f"{fromhost}--{payload}"
         if key in self.pong_callbacks:
-            self.adapi.log(f"pong_callback found")
+            self.adapi.log(f"pong_callback found", level="DEBUG")
             self.pong_callbacks[key]()  # success_cb
             del self.pong_callbacks[key]
         else:
@@ -66,10 +67,18 @@ class PluginPingPong(Plugin):
 
         Note - this will NOT work from Hass / Dashboard directly! This only works within Appdaemon.
 
-        call_service(xxx)
+        self.adapi.call_service(
+            "sync_entities_via_mqtt/ping",
+            tohost="haven",
+            timeout=20,  # Seconds
+            success_cb=cb_success, # fn
+            timeout_cb=cb_timeout, # fn
+        )
 
         What it does:
             mqtt_publish("mqtt_shared/seattle/haven/ping", payload="<timestamp>")
+            
+            Then calls cb_success() or cb_timeout() if timeout.
         """
 
         def callback_ping_service(
@@ -77,7 +86,7 @@ class PluginPingPong(Plugin):
         ) -> None:
             self.adapi.log(
                 f"callback_ping_service(namespace={namespace}, service={service}, action={action}, kwargs={kwargs})",
-                level="INFO",
+                level="DEBUG",
             )
 
             # Check args
@@ -119,7 +128,7 @@ class PluginPingPong(Plugin):
                 self.pong_callbacks[key] = success_cb
 
                 def run_timout(kwargs):
-                    self.adapi.log(f"PONG TIMEOUT - {key}", level="INFO")
+                    self.adapi.log(f"PONG TIMEOUT - {key}", level="DEBUG")
                     if key in self.pong_callbacks:
                         timeout_cb()
                         del self.pong_callbacks[key]
@@ -134,22 +143,30 @@ class PluginPingPong(Plugin):
 
         self.adapi.log(
             "register_service: sync_entities_via_mqtt -- ping",
-            level="INFO",
+            level="DEBUG",
         )
 
     def test_ping_pong_service(self, kwargs):
-        self.adapi.log(f"Test Ping/Pong Service")
+        self.adapi.log(f"##test_ping_pong_service(): Test Ping/Pong Service")
 
         def cb_success():
-            self.adapi.log(f"**cb_successs()")
+            self.adapi.log(f"##test_ping_pong_service(): ** PONG - SUCCESS")
 
         def cb_timeout():
-            self.adapi.log(f"**cb_timeout()")
-            
+            self.adapi.log(f"##test_ping_pong_service(): ** PONG - TIMEOUT")
+
         self.adapi.call_service(
             "sync_entities_via_mqtt/ping",
             tohost="haven",
-            timeout=0,
+            timeout=0,  # Will succeed (if remote is slow or has an intentional sleep)
+            success_cb=cb_success,
+            timeout_cb=cb_timeout,
+        )
+
+        self.adapi.call_service(
+            "sync_entities_via_mqtt/ping",
+            tohost="haven",
+            timeout=3,  # Should timeout
             success_cb=cb_success,
             timeout_cb=cb_timeout,
         )

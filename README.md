@@ -291,3 +291,31 @@ fire_event_sync_entities_via_mqtt_set_state:
             card:
             - background-color: yellow
 ```
+
+# Ping / Pong
+SyncEntities also enables a `ping` service. This is helpful for testing bidirectional MQ
+connectivity.
+
+```
+# On "seattle"
+mqtt_shared/seattle/haven/ping payload # <- Send this from seattl
+mqtt_shared/haven/seattle/pong payload # <- Receive this from haven
+```
+
+## Ping / Pong Service
+Note - this will NOT work from Hass / Dashboard directly! This only works within Appdaemon.
+
+```
+self.adapi.call_service(
+    "sync_entities_via_mqtt/ping",
+    tohost="haven",
+    timeout=20,  # Seconds
+    success_cb=cb_success, # fn
+    timeout_cb=cb_timeout, # fn
+)
+```
+
+What it does:
+    
+1. `mqtt_publish("mqtt_shared/seattle/haven/ping", payload="<timestamp>")`  
+2. Then calls `cb_success()` or `cb_timeout()` if timeout.
