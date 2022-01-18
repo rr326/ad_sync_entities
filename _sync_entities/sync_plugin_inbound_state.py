@@ -70,4 +70,4 @@ class PluginInboundState(Plugin):
         for entity in self.state_entities:
             cur_state = self.adapi.get_state(entity)
             self.adapi.log(f"** registered {entity} -- {cur_state}", level="DEBUG")
-            self.adapi.listen_state(state_callback, entity)
+            self.adapi.listen_state(state_callback, entity, immediate=True)
