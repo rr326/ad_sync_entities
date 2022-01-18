@@ -1,9 +1,8 @@
 import datetime as dt
-from typing import Callable, Optional, Dict, Tuple
+from typing import Callable, Dict
 
 from _sync_entities.sync_dispatcher import EventPattern
 from _sync_entities.sync_plugin import Plugin
-from appdaemon.plugins.hass.hassplugin import HassPlugin
 
 # pylint: disable=unused-argument
 
@@ -77,7 +76,7 @@ class PluginPingPong(Plugin):
 
         What it does:
             mqtt_publish("mqtt_shared/seattle/haven/ping", payload="<timestamp>")
-            
+
             Then calls cb_success() or cb_timeout() if timeout.
         """
 
