@@ -69,7 +69,7 @@ class PluginInboundState(Plugin):
     ):
         # Does two jobs - registering a listener on state, or sending state
         def state_callback(entity, _, __, cur_state, ___):
-            self.adapi.log(f"state_callback(): {entity}  -- {cur_state}", level="INFO")
+            self.adapi.log(f"state_callback(): {entity}  -- {cur_state}", level="DEBUG")
             self.mqtt.mqtt_publish(
                 topic=f"{self.mqtt_base_topic}/{self.myhostname}/{tohost}/state/{entity}",
                 payload=cur_state,
@@ -103,7 +103,7 @@ class PluginInboundState(Plugin):
             """
             self.adapi.log(
                 f"EVENT - received: {fromhost}/{tohost}/{event}/{entity} data: {payload}",
-                level="INFO",
+                level="DEBUG",
             )
             self.send_state_entities_tohost(fromhost)
 
