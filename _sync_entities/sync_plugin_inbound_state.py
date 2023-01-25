@@ -1,4 +1,5 @@
-from typing import Callable, Optional
+from typing import Callable
+
 from _sync_entities.sync_dispatcher import EventPattern
 from _sync_entities.sync_plugin import Plugin
 from _sync_entities.sync_utils import entity_local_to_remote, entity_remote_to_local

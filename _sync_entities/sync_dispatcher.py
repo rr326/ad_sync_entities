@@ -208,7 +208,9 @@ class EventListenerDispatcher:
         return safe_payload_as_obj(payload, self.adapi)
 
     def dispatch(self, mq_event, payload) -> list:
-        self.adapi.log(f"dispatching mq_eventxx: {mq_event} -- {payload}", level="DEBUG")
+        self.adapi.log(
+            f"dispatching mq_eventxx: {mq_event} -- {payload}", level="DEBUG"
+        )
         did_dispatch = False
         results = []
         for (

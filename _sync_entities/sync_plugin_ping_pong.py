@@ -159,7 +159,8 @@ class PluginPingPong(Plugin):
             tohost="haven",
             timeout=0,  # Will succeed (if remote is slow or has an intentional sleep)
             success_cb=cb_success,
-            timeout_cb=cb_timeout, return_result=False
+            timeout_cb=cb_timeout,
+            return_result=False,
         )
 
         self.adapi.call_service(
@@ -167,5 +168,6 @@ class PluginPingPong(Plugin):
             tohost="haven",
             timeout=3,  # Should timeout
             success_cb=cb_success,
-            timeout_cb=cb_timeout, return_result=False
+            timeout_cb=cb_timeout,
+            return_result=False,
         )

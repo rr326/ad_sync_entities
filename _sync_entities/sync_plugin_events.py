@@ -193,7 +193,8 @@ class PluginEvents(Plugin):
             self.adapi.call_service(
                 f'sync_entities_via_mqtt/{data.get("action", "NO_ACTION")}',
                 entity_id=data.get("entity_id"),
-                state=data.get("state"), return_result=False
+                state=data.get("state"),
+                return_result=False,
             )
 
         self.adapi.listen_event(
@@ -206,7 +207,9 @@ class PluginEvents(Plugin):
         if self.myhostname == "haven":
             self.adapi.log("Calling: sync_entities_via_mqtt/toggle_state")
             self.adapi.call_service(
-                "sync_entities_via_mqtt/toggle_state", entity_id="light.office_seattle", return_result=False
+                "sync_entities_via_mqtt/toggle_state",
+                entity_id="light.office_seattle",
+                return_result=False,
             )  # pyright: reportGeneralTypeIssues=false
 
 
