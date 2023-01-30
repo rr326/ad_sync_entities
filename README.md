@@ -1,3 +1,11 @@
+# Debugging
+
+1/30/23 - Restart Mosquitto container as a first test
+
+For whatever reason it stopped working, even after resetting the server. 
+Eventually I stopped and started the mosquitto container, and everything
+worked again. Go figure.
+
 # Sync Entities Via MQTT
 
 Sync Entities Via MQTT is an Appdaemon app for HomeAssitant that enables
