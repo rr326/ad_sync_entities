@@ -63,7 +63,7 @@ class PluginInboundState(Plugin):
             f"inbound_callback() set_state({remote_entity}, state={payload})",
             level="DEBUG",
         )
-        self.adapi.set_state(f"{remote_entity}", state=payload, namespace="default")
+        self.adapi.set_state(f"{remote_entity}", state=payload, namespace="default", _silent=True)
 
     def __register_or_send_state(
         self, tohost: str, action_fn: Callable[[Callable, str], None]
