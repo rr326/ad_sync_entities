@@ -196,7 +196,7 @@ class TestSyncEntitiesViaMqtt(mqtt.Mqtt):
         )
 
     def test_plugin_ping_pong(self, _):
-        self.log("*** TEST PING/PONG ***")
+        self.log("*** TEST PING/PONG (WILL ONLY SEE RESPONSES IF DEBUG LOGGING)***")
 
         self.tp(
             "mqtt_shared/seattle/haven/ping",
