@@ -327,3 +327,14 @@ What it does:
     
 1. `mqtt_publish("mqtt_shared/seattle/haven/ping", payload="<timestamp>")`  
 2. Then calls `cb_success()` or `cb_timeout()` if timeout.
+
+## Testing MQTT
+(7/25/25)
+Open a terminal with 4 panes. Right side - sub. Left side. Sub.
+
+subscribe all: `mosquitto_sub -v -t '#' -h localhost`
+publish: `mosquitto_pub -t 'mqtt_shared/test' -m 'from haven' -h localhost`
+
+Note - Publish needs to be "mqtt_shared" topic. (Shared via digital ocean bridge server)
+
+If you pub something and it shows up on the other side, you know the low level is working. 
