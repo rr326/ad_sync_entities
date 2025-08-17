@@ -26,7 +26,7 @@ SyncEntitiesViaMqtt:
     - sync_plugin_events
 
 TestSyncEntitiesViaMqtt:
-  module: test_sync_entities
+  module: _sync_entities.test_sync_entities
   class: TestSyncEntitiesViaMqtt
   disable: true
   dependencies: 
