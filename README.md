@@ -1,3 +1,18 @@
+# Status 7/26/25
+
+I've reinstalled the pi5-seattle, all from scratch. It looks *close*.
+
+The current problem seems to be that pi-haven is no longer working!
+
+* homeassistant won't run
+* this is becuase: `Error response from daemon: error gathering device information while adding custom device "/dev/ttyACM0": no such file or directory`
+  * It looks like the zwave stick isn't registering properly
+  * Here is a thread with debugging steps: https://chatgpt.com/share/6884d5f4-0eb8-8008-9521-0cd87ad6f2a8
+  * I basically need to start by plugging in and unplugging
+* Of course, my backups haven't worked in a year! Dammit.
+
+
+
 # Debugging
 
 1/30/23 - Restart Mosquitto container as a first test
