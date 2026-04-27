@@ -1,0 +1,8 @@
+SyncEntitiesViaMqtt:
+  module: sync_entities_via_mqtt
+  class: SyncEntitiesViaMqtt
+  myhostname: "3408" # no dashes allowed
+  state_for_entities:
+      - input_select.home_state
+  disable: false
+  log_level: INFO
