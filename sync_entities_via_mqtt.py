@@ -44,6 +44,11 @@ class SyncEntitiesViaMqtt(mqtt.Mqtt):
             "type": "list",
             "schema": {"type": "string"},
         },
+        "state_with_attributes_for_entities": {
+            "required": False,
+            "type": "list",
+            "schema": {"type": "string"},
+        },
     }
 
     def initialize(self):

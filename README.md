@@ -1,3 +1,18 @@
+# Change Log
+
+## 4/27/26 — state_with_attributes_for_entities
+Added `state_with_attributes_for_entities` config option. This syncs both state
+AND attributes as a JSON payload, unlike `state_for_entities` which only syncs
+the state string. Use this for entities like `app.dashboard_colors` where the
+data lives in attributes, not the state.
+
+On the receiving side, the entity appears as `sensor.<platform>_<name>_xx<host>xx`
+with all attributes preserved.
+
+Backward-compatible: plain string payloads (from `state_for_entities`) still work
+as before. JSON payloads with `{"state": ..., "attributes": {...}}` are detected
+automatically on the inbound side.
+
 # Status 7/26/25
 
 I've reinstalled the pi5-seattle, all from scratch. It looks *close*.

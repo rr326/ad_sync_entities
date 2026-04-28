@@ -14,6 +14,9 @@ SyncEntitiesViaMqtt:
   state_for_entities:
       - light.entity1
       - input_select.entity2
+  # Sync state + all attributes as JSON (for entities like app.dashboard_colors)
+  state_with_attributes_for_entities:
+      - app.dashboard_colors
   disable: false
   log_level: DEBUG # INFO once tested.
   global_dependencies:
